@@ -24,22 +24,33 @@ cd ..
 export PORT=8000
 
 echo "🔧 Configurando puertos para Replit..."
+echo "🌍 Variables de entorno:"
+echo "  REPL_SLUG: $REPL_SLUG"
+echo "  REPL_OWNER: $REPL_OWNER"
+echo "  PORT: $PORT"
 
 # Iniciar backend en background
 echo "🟢 Iniciando backend FastAPI..."
 cd backend
 uvicorn app.main:app --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
+echo "📡 Backend PID: $BACKEND_PID"
 cd ..
 
 # Esperar a que el backend esté listo
-sleep 5
+echo "⏳ Esperando a que el backend inicie..."
+sleep 10
+
+# Verificar que el backend esté corriendo
+echo "🔍 Verificando backend..."
+curl -s http://localhost:8000/health || echo "⚠️ Backend no responde aún"
 
 # Iniciar frontend
 echo "🔵 Iniciando frontend React..."
 cd frontend
 npm run dev -- --host 0.0.0.0 --port 5173 &
 FRONTEND_PID=$!
+echo "🎨 Frontend PID: $FRONTEND_PID"
 
 echo "✅ Dashboard iniciado!"
 echo "🌐 Backend: http://localhost:8000"
