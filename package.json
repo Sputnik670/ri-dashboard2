@@ -1,0 +1,24 @@
+{
+  "name": "ri-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard para el Ministerio de Ciencia - Relaciones Internacionales",
+  "main": "backend/app/main.py",
+  "scripts": {
+    "start": "bash start.sh",
+    "dev": "bash start.sh",
+    "backend": "cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+    "frontend": "cd frontend && npm run dev -- --host 0.0.0.0",
+    "build": "cd frontend && npm run build",
+    "install": "cd backend && pip install -r requirements.txt && cd ../frontend && npm install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sputnik670/ri-dashboard2.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "python": ">=3.11.0"
+  }
+}
