@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Relaciones Internacionales</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #f5f5f5; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { margin-bottom: 30px; color: #2c3e50; }
+        h2 { margin-top: 30px; margin-bottom: 15px; color: #34495e; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
+        .card h3 { color: #7f8c8d; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; }
+        .card p { font-size: 28px; font-weight: bold; color: #3498db; }
+        .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filters input { flex: 1; min-width: 120px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        .table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .table th { background: #34495e; color: white; font-weight: 600; }
+        .table tr:hover { background: #f9f9f9; }
+        .form { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 10px; max-width: 500px; }
+        .form input, .form label { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        .form input[type="checkbox"] { width: 20px; height: 20px; margin-right: 8px; }
+        .form label { display: flex; align-items: center; border: none; padding: 0; }
+        .form button { padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; }
+        .form button:hover { background: #2980b9; }
+        .charts { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .chart { width: 100%; height: 300px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard - Relaciones Internacionales</h1>
+        
+        <div class="cards" id="kpis-container">
+            <div class="card"><h3>Cargando...</h3><p>...</p></div>
+        </div>
+
+        <div class="charts">
+            <div id="barChart" class="chart"></div>
+            <div id="lineChart" class="chart"></div>
+        </div>
+
+        <h2>Filtros</h2>
+        <div class="filters">
+            <input type="text" id="filterCountry" placeholder="País">
+            <input type="date" id="filterStart" placeholder="Desde">
+            <input type="date" id="filterEnd" placeholder="Hasta">
+            <button onclick="applyFilters()">Filtrar</button>
+        </div>
+
+        <h2 id="tableTitle">Acuerdos Internacionales</h2>
+        <table class="table">
+            <thead>
+                <tr><th>ID</th><th>País</th><th>Fecha</th><th>Monto (USD)</th><th>Activo</th><th>Contacto</th></tr>
+            </thead>
+            <tbody id="agreementsTable">
+                <tr><td colspan="6">Cargando...</td></tr>
+            </tbody>
+        </table>
+
+        <h2>Crear Acuerdo de Prueba</h2>
+        <form class="form" onsubmit="createAgreement(event)">
+            <input type="text" id="formCountry" placeholder="País" required>
+            <input type="date" id="formDate" required>
+            <input type="number" id="formAmount" placeholder="Monto USD" required>
+            <label><input type="checkbox" id="formActive"> Proyecto activo</label>
+            <input type="text" id="formContact" placeholder="Contacto">
+            <button type="submit">Crear</button>
+        </form>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+
+        async function loadData() {
+            try {
+                const [kpis, agreements] = await Promise.all([
+                    fetch(`${API_BASE}/api/kpis`).then(r => r.json()),
+                    fetch(`${API_BASE}/api/agreements`).then(r => r.json())
+                ]);
+                updateKPIs(kpis);
+                updateAgreementsTable(agreements);
+                updateCharts(kpis, agreements);
+            } catch(e) {
+                console.error('Load error:', e);
+                document.getElementById('kpis-container').innerHTML = `<div class="card"><h3>Error</h3><p>${e.message}</p></div>`;
+            }
+        }
+
+        function updateKPIs(kpis) {
+            const html = `
+                <div class="card"><h3>Acuerdos por país</h3><p>${Object.keys(kpis.agreements_per_country).length}</p></div>
+                <div class="card"><h3>Proyectos activos</h3><p>${kpis.active_projects}</p></div>
+                <div class="card"><h3>Financiamiento (M USD)</h3><p>${kpis.international_funding_millions_usd}</p></div>
+                <div class="card"><h3>Contactos</h3><p>${kpis.contacts_count}</p></div>
+            `;
+            document.getElementById('kpis-container').innerHTML = html;
+        }
+
+        function updateAgreementsTable(agreements) {
+            const rows = agreements.map(a => `
+                <tr>
+                    <td>${a.id}</td>
+                    <td>${a.country}</td>
+                    <td>${a.date}</td>
+                    <td>$${a.amount_usd.toLocaleString()}</td>
+                    <td>${a.project_active ? 'Sí' : 'No'}</td>
+                    <td>${a.contact || '-'}</td>
+                </tr>
+            `).join('');
+            document.getElementById('agreementsTable').innerHTML = rows || '<tr><td colspan="6">Sin datos</td></tr>';
+            document.getElementById('tableTitle').textContent = `Acuerdos Internacionales (${agreements.length})`;
+        }
+
+        function updateCharts(kpis, agreements) {
+            // Bar chart
+            const barChart = echarts.init(document.getElementById('barChart'));
+            barChart.setOption({
+                title: { text: 'Acuerdos por País' },
+                tooltip: {},
+                xAxis: { type: 'category', data: Object.keys(kpis.agreements_per_country) },
+                yAxis: { type: 'value' },
+                series: [{ data: Object.values(kpis.agreements_per_country), type: 'bar', itemStyle: { color: '#3498db' } }]
+            });
+
+            // Line chart
+            const monthMap = {};
+            agreements.forEach(a => {
+                const month = a.date.slice(0, 7);
+                monthMap[month] = (monthMap[month] || 0) + a.amount_usd;
+            });
+            const months = Object.keys(monthMap).sort();
+            const lineChart = echarts.init(document.getElementById('lineChart'));
+            lineChart.setOption({
+                title: { text: 'Financiamiento por Mes (M USD)' },
+                tooltip: {},
+                xAxis: { type: 'category', data: months },
+                yAxis: { type: 'value' },
+                series: [{ data: months.map(m => (monthMap[m] / 1000000).toFixed(2)), type: 'line', smooth: true, itemStyle: { color: '#2ecc71' } }]
+            });
+        }
+
+        async function applyFilters() {
+            const country = document.getElementById('filterCountry').value;
+            const start = document.getElementById('filterStart').value;
+            const end = document.getElementById('filterEnd').value;
+            const params = new URLSearchParams();
+            if(country) params.append('country', country);
+            if(start) params.append('start', start);
+            if(end) params.append('end', end);
+            const url = `${API_BASE}/api/agreements${params.toString() ? '?' + params.toString() : ''}`;
+            const agreements = await fetch(url).then(r => r.json());
+            updateAgreementsTable(agreements);
+        }
+
+        async function createAgreement(e) {
+            e.preventDefault();
+            const data = {
+                country: document.getElementById('formCountry').value,
+                date: document.getElementById('formDate').value,
+                amount_usd: parseFloat(document.getElementById('formAmount').value),
+                project_active: document.getElementById('formActive').checked,
+                contact: document.getElementById('formContact').value
+            };
+            try {
+                await fetch(`${API_BASE}/api/agreements`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                e.target.reset();
+                loadData();
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
