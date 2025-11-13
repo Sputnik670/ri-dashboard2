@@ -2,16 +2,22 @@
 
 echo "🚀 Iniciando RI Dashboard en Replit..."
 
+# Verificar que pip y npm están disponibles
+echo "🔍 Verificando herramientas..."
+which python3 || { echo "❌ Python3 no encontrado"; exit 1; }
+which pip3 || which pip || { echo "❌ pip no encontrado"; exit 1; }
+which npm || { echo "❌ npm no encontrado"; exit 1; }
+
 # Instalar dependencias del backend
 echo "📦 Instalando dependencias del backend..."
 cd backend
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt || { echo "❌ Error instalando dependencias Python"; exit 1; }
 cd ..
 
 # Instalar dependencias del frontend
 echo "🎨 Instalando dependencias del frontend..."
 cd frontend
-npm install
+npm install || { echo "❌ Error instalando dependencias npm"; exit 1; }
 cd ..
 
 # Configurar el puerto del backend para Replit
