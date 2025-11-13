@@ -11,13 +11,13 @@ which npm || { echo "❌ npm no encontrado"; exit 1; }
 # Instalar dependencias del backend
 echo "📦 Instalando dependencias del backend..."
 cd backend
-python3 -m pip install -r requirements.txt || { echo "❌ Error instalando dependencias Python"; exit 1; }
+python3 -m pip install --user -r requirements.txt || { echo "❌ Error instalando dependencias Python"; exit 1; }
 cd ..
 
 # Instalar dependencias del frontend
 echo "🎨 Instalando dependencias del frontend..."
 cd frontend
-npm install || { echo "❌ Error instalando dependencias npm"; exit 1; }
+npm ci || npm install || { echo "❌ Error instalando dependencias npm"; exit 1; }
 cd ..
 
 # Configurar el puerto del backend para Replit

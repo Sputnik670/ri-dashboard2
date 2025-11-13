@@ -36,6 +36,5 @@ Thumbs.db
 .cache/
 .parcel-cache/
 
-# Replit
-.replit
+# Replit (keep .replit and replit.nix for deployment)
 .config/
